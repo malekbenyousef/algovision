@@ -4,18 +4,18 @@
   "description": "",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.109.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": ["onCommand:algovision.visualize"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "algovision.helloWorld",
-        "title": "Hello World"
+        "command": "algovision.visualize",
+        "title": "AlgoVision: Start Visualizing"
       }
     ]
   },
