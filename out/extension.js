@@ -36,21 +36,42 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
+const acorn = __importStar(require("acorn"));
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 function activate(context) {
-    console.log('Congratulations, your extension "algovision" is now active!');
-    const disposable = vscode.commands.registerCommand('algovision.visualize', () => {
-        const panel = vscode.window.createWebviewPanel('pythonViz', 'AlgoVision: Python Visualizer', vscode.ViewColumn.Two, { enableScripts: true });
-        panel.webview.html = `
-            <!DOCTYPE html>
-            <html>
-                <body style="background-color: white; color: black;">
-                    <h1>AlgoVision</h1>
-                    <div id="graph"></div>
-                </body>
-            </html>
-        `;
+    console.log('AlgoVision is now active!');
+    let disposable = vscode.commands.registerCommand('algovision.visualize', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor)
+            return vscode.window.showErrorMessage('AlgoVision: No active editor found!');
+        const code = editor.document.getText();
+        try {
+            const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
+            const panel = vscode.window.createWebviewPanel('algovisionPanel', 'AlgoVision', vscode.ViewColumn.Beside, {
+                enableScripts: true,
+                localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'webview'))]
+            });
+            panel.webview.html = getWebviewContent(panel.webview, context.extensionPath);
+            panel.webview.postMessage({ command: 'updateData', ast: ast });
+        }
+        catch (error) {
+            vscode.window.showErrorMessage('AlgoVision: Failed to parse JavaScript code.');
+            console.error(error);
+        }
     });
     context.subscriptions.push(disposable);
+}
+function getWebviewContent(webview, extensionPath) {
+    const htmlPath = path.join(extensionPath, 'webview', 'index.html');
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    const stylePathOnDisk = vscode.Uri.file(path.join(extensionPath, 'webview', 'style.css'));
+    const scriptPathOnDisk = vscode.Uri.file(path.join(extensionPath, 'webview', 'main.js'));
+    const styleUri = webview.asWebviewUri(stylePathOnDisk);
+    const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+    html = html.replace('{{styleUri}}', styleUri.toString());
+    html = html.replace('{{scriptUri}}', scriptUri.toString());
+    return html;
 }
 function deactivate() { }
 //# sourceMappingURL=extension.js.map
