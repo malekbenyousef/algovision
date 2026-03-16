@@ -4,37 +4,43 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('AlgoVision is now active!');
+let panel: vscode.WebviewPanel | undefined = undefined
+    context.subscriptions.push(
+        vscode.commands.registerCommand('algovision.visualize', () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) return vscode.window.showErrorMessage('AlgoVision: No active editor found!');
 
-    let disposable = vscode.commands.registerCommand('algovision.visualize', () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) return vscode.window.showErrorMessage('AlgoVision: No active editor found!');
+            const code = editor.document.getText();
 
-        const code = editor.document.getText();
+            try {
+                const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
 
-        try {
-            const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
+                 panel = vscode.window.createWebviewPanel(
+                    'algovisionPanel',
+                    'AlgoVision',
+                     vscode.ViewColumn.Beside, 
+                    {
+                        enableScripts: true,
+                        localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'webview'))]
+                    }
+                );
 
-            const panel = vscode.window.createWebviewPanel(
-                'algovisionPanel',
-                'AlgoVision',
-                vscode.ViewColumn.Beside, 
-                {
-                    enableScripts: true,
-                    localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'webview'))]
-                }
-            );
+                panel.webview.html = getWebviewContent(panel.webview, context.extensionPath);
+                panel.webview.postMessage({ command: 'updateData', ast: ast });
+                panel.onDidDispose(
+                    ()=>{
+                        panel = undefined;
+                    },
+                    null,
+                    context.subscriptions
+                )
 
-            panel.webview.html = getWebviewContent(panel.webview, context.extensionPath);
-            panel.webview.postMessage({ command: 'updateData', ast: ast });
-
-        } catch (error) {
-            vscode.window.showErrorMessage('AlgoVision: Failed to parse JavaScript code.');
-            console.error(error);
-        }
-    });
-
-    context.subscriptions.push(disposable);
+            } catch (error) {
+                vscode.window.showErrorMessage('AlgoVision: Failed to parse JavaScript code.');
+                console.error(error);
+            }
+        }));
+    
 }
 
 function getWebviewContent(webview: vscode.Webview, extensionPath: string) {

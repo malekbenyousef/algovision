@@ -40,27 +40,29 @@ const acorn = __importStar(require("acorn"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 function activate(context) {
-    console.log('AlgoVision is now active!');
-    let disposable = vscode.commands.registerCommand('algovision.visualize', () => {
+    let panel = undefined;
+    context.subscriptions.push(vscode.commands.registerCommand('algovision.visualize', () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor)
             return vscode.window.showErrorMessage('AlgoVision: No active editor found!');
         const code = editor.document.getText();
         try {
             const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
-            const panel = vscode.window.createWebviewPanel('algovisionPanel', 'AlgoVision', vscode.ViewColumn.Beside, {
+            panel = vscode.window.createWebviewPanel('algovisionPanel', 'AlgoVision', vscode.ViewColumn.Beside, {
                 enableScripts: true,
                 localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'webview'))]
             });
             panel.webview.html = getWebviewContent(panel.webview, context.extensionPath);
             panel.webview.postMessage({ command: 'updateData', ast: ast });
+            panel.onDidDispose(() => {
+                panel = undefined;
+            }, null, context.subscriptions);
         }
         catch (error) {
             vscode.window.showErrorMessage('AlgoVision: Failed to parse JavaScript code.');
             console.error(error);
         }
-    });
-    context.subscriptions.push(disposable);
+    }));
 }
 function getWebviewContent(webview, extensionPath) {
     const htmlPath = path.join(extensionPath, 'webview', 'index.html');
