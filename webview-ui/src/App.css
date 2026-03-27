@@ -1,0 +1,33 @@
+body {
+  font-family: var(--vscode-editor-font-family), monospace;
+  font-size: var(--vscode-editor-font-size);
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-background);
+  padding: 20px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+h2 {
+  margin-top: 0;
+  color: var(--vscode-textPreformat-foreground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding-bottom: 10px;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.status-text {
+  animation: pulse 2s infinite;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 20px;
+}

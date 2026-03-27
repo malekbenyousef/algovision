@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+webview-dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# VS Code specific
+.vscode-test/
+*.vsix
+
+# OS metadata
+.DS_Store
+Thumbs.db
