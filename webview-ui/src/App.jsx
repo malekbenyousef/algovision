@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import './App.css';
-
 const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
 
 function App() {
@@ -36,26 +34,23 @@ function App() {
     }, [variables, isPlaying]);
 
     return (
-        <div className="app-container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--vscode-panel-border)', paddingBottom: '10px' }}>
-                <h2 style={{ margin: 0, border: 'none', padding: 0 }}>AlgoVision</h2>
+        <div className="flex flex-col">
+            <div className="flex justify-between items-center border-b border-(--vscode-panel-border) pb-2.5">
+                <h2 className="m-0 p-0 border-none font-semibold text-(--vscode-textPreformat-foreground) text-2xl">
+                    AlgoVision
+                </h2>
                 <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    style={{
-                        background: isPlaying ? 'var(--vscode-errorForeground)' : 'var(--vscode-button-background)',
-                        color: 'var(--vscode-button-foreground)',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
+                    className={`px-3 py-1.5 rounded-sm cursor-pointer font-bold border-none transition-colors duration-200 ${isPlaying
+                        ? 'bg-(--vscode-errorForeground) text-white'
+                        : 'bg-(--vscode-button-background) text-(--vscode-button-foreground) hover:bg-(--vscode-button-hoverBackground)'
+                        }`}
                 >
                     {isPlaying ? '⏸ Pause' : '▶ Auto-Play'}
                 </button>
             </div>
 
-            <p style={{ opacity: 0.7 }}>
+            <p className="opacity-70 mt-4 mb-6">
                 {isPlaying ? 'Auto-stepping...' : 'Execution paused. Stepping through...'}
             </p>
 
@@ -69,84 +64,41 @@ function App() {
 
 
 function VariableNode({ variable, prevVar }) {
-
     if (variable.kind === 'linkedList') {
         return (
-            <div style={{ margin: '15px 0', padding: '10px', background: 'var(--vscode-editor-inactiveSelectionBackground)', borderRadius: '6px' }}>
-                <div style={{ marginBottom: '12px' }}>
-                    <span style={{ color: '#75beff', fontWeight: 'bold' }}>{variable.name}</span>
-                    <span style={{ opacity: 0.6, fontSize: '0.85em', marginLeft: '6px' }}>(Linked List)</span>
+            <div className="my-4 p-3 bg-(--vscode-editor-inactiveSelectionBackground) rounded-md">
+                <div className="mb-3">
+                    <span className="font-bold text-[#75beff]">{variable.name}</span>
+                    <span className="opacity-60 ml-1.5 text-[0.85em]">(Linked List)</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', rowGap: '12px' }}>
+                <div className="flex flex-wrap items-center gap-y-3">
                     {variable.nodes.map((val, index) => {
                         const hasChanged = prevVar && prevVar.nodes[index] !== val;
+
+                        const borderColor = hasChanged ? 'border-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'border-[var(--vscode-panel-border)]';
+                        const bgColor = hasChanged ? 'bg-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'bg-transparent';
+                        const textColor = hasChanged ? 'text-white' : 'text-inherit';
+                        const scale = hasChanged ? 'scale-110' : 'scale-100';
+
                         return (
-                            <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
-                                {/* Node box: value section + pointer section */}
-                                <div style={{
-                                    display: 'flex',
-                                    border: `2px solid ${hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'var(--vscode-panel-border)'}`,
-                                    borderRadius: '4px',
-                                    overflow: 'hidden',
-                                    transition: 'all 0.3s ease-out',
-                                    transform: hasChanged ? 'scale(1.1)' : 'scale(1)',
-                                }}>
-                                    {/* Value half */}
-                                    <div style={{
-                                        minWidth: '40px',
-                                        height: '40px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: 'bold',
-                                        padding: '0 8px',
-                                        backgroundColor: hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'transparent',
-                                        color: hasChanged ? '#fff' : 'inherit',
-                                        transition: 'all 0.3s ease-out',
-                                    }}>
+                            <div key={index} className="flex items-center">
+                                <div className={`flex border-2 ${borderColor} rounded-md overflow-hidden transition-all duration-300 ease-out ${scale}`}>
+                                    <div className={`min-w-10 h-10 flex items-center justify-center font-bold px-2 transition-all duration-300 ease-out ${bgColor} ${textColor}`}>
                                         {val}
                                     </div>
-                                    {/* Pointer half */}
-                                    <div style={{
-                                        width: '28px',
-                                        height: '40px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        borderLeft: `2px solid ${hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'var(--vscode-panel-border)'}`,
-                                        opacity: 0.6,
-                                        fontSize: '0.9em',
-                                        transition: 'all 0.3s ease-out',
-                                    }}>
+                                    <div className={`w-7 h-10 flex items-center justify-center border-l-2 ${borderColor} opacity-60 text-[0.9em] transition-all duration-300 ease-out`}>
                                         →
                                     </div>
                                 </div>
-                                {/* Connector line between nodes */}
                                 {index < variable.nodes.length - 1 && (
-                                    <div style={{
-                                        width: '16px',
-                                        height: '2px',
-                                        background: 'var(--vscode-panel-border)',
-                                    }} />
+                                    <div className="w-4 h-0.5 bg-(--vscode-panel-border)" />
                                 )}
                             </div>
                         );
                     })}
-                    {/* Null terminator */}
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{
-                            width: '16px',
-                            height: '2px',
-                            background: 'var(--vscode-panel-border)',
-                        }} />
-                        <div style={{
-                            padding: '4px 10px',
-                            border: '2px solid var(--vscode-panel-border)',
-                            borderRadius: '4px',
-                            opacity: 0.45,
-                            fontStyle: 'italic',
-                            fontSize: '0.85em',
-                        }}>
+                    <div className="flex items-center">
+                        <div className="w-4 h-0.5 bg-(--vscode-panel-border)" />
+                        <div className="px-2.5 py-1 border-2 border-(--vscode-panel-border) rounded-md opacity-45 italic text-[0.85em]">
                             null
                         </div>
                     </div>
@@ -157,53 +109,28 @@ function VariableNode({ variable, prevVar }) {
 
     if (variable.kind === 'object') {
         return (
-            <div style={{ margin: '15px 0', padding: '10px', background: 'var(--vscode-editor-inactiveSelectionBackground)', borderRadius: '6px' }}>
-                <div style={{ marginBottom: '12px' }}>
-                    <span style={{ color: '#75beff', fontWeight: 'bold' }}>{variable.name}</span>
-                    <span style={{ opacity: 0.6, fontSize: '0.85em', marginLeft: '6px' }}>(Object)</span>
+            <div className="bg-(--vscode-editor-inactiveSelectionBackground) my-4 p-3 rounded-md">
+                <div className="mb-3">
+                    <span className="font-bold text-[#75beff]">{variable.name}</span>
+                    <span className="opacity-60 ml-1.5 text-[0.85em]">(Object)</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="flex flex-col gap-2">
                     {variable.entries.map(({ key, value }) => {
                         const prevEntry = prevVar?.entries?.find(e => e.key === key);
                         const hasChanged = prevEntry && prevEntry.value !== value;
+
+                        const borderColor = hasChanged ? 'border-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'border-[var(--vscode-panel-border)]';
+                        const highlightColor = hasChanged ? 'bg-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'bg-transparent';
+                        const connectorColor = hasChanged ? 'bg-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'bg-[var(--vscode-panel-border)]';
+                        const textColor = hasChanged ? 'text-white' : 'text-inherit';
+
                         return (
-                            <div key={key} style={{ display: 'flex', alignItems: 'center' }}>
-                                {/* Key box */}
-                                <div style={{
-                                    padding: '6px 12px',
-                                    border: `2px solid ${hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'var(--vscode-panel-border)'}`,
-                                    borderRight: 'none',
-                                    borderRadius: '4px 0 0 4px',
-                                    fontWeight: 'bold',
-                                    color: '#75beff',
-                                    fontSize: '0.9em',
-                                    minWidth: '60px',
-                                    textAlign: 'center',
-                                    background: 'var(--vscode-editor-background)',
-                                    transition: 'all 0.3s ease-out',
-                                }}>
+                            <div key={key} className="flex items-center">
+                                <div className={`px-3 py-1.5 border-2 border-r-0 ${borderColor} rounded-l-md font-bold text-[#75beff] text-[0.9em] min-w-15 text-center bg-(--vscode-editor-background) transition-all duration-300 ease-out`}>
                                     {key}
                                 </div>
-                                {/* Connector line */}
-                                <div style={{
-                                    width: '20px',
-                                    height: '2px',
-                                    background: hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'var(--vscode-panel-border)',
-                                    transition: 'all 0.3s ease-out',
-                                }} />
-                                {/* Value box */}
-                                <div style={{
-                                    padding: '6px 12px',
-                                    border: `2px solid ${hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'var(--vscode-panel-border)'}`,
-                                    borderLeft: 'none',
-                                    borderRadius: '0 4px 4px 0',
-                                    fontSize: '0.9em',
-                                    minWidth: '60px',
-                                    textAlign: 'center',
-                                    backgroundColor: hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'transparent',
-                                    color: hasChanged ? '#fff' : 'inherit',
-                                    transition: 'all 0.3s ease-out',
-                                }}>
+                                <div className={`w-5 h-0.5 transition-all duration-300 ease-out ${connectorColor}`} />
+                                <div className={`px-3 py-1.5 border-2 border-l-0 ${borderColor} rounded-r-md text-[0.9em] min-w-15 text-center transition-all duration-300 ease-out ${highlightColor} ${textColor}`}>
                                     {value}
                                 </div>
                             </div>
@@ -216,33 +143,26 @@ function VariableNode({ variable, prevVar }) {
 
     if (variable.kind === 'array') {
         return (
-            <div style={{ margin: '15px 0', padding: '10px', background: 'var(--vscode-editor-inactiveSelectionBackground)', borderRadius: '6px' }}>
-                <div style={{ marginBottom: '10px' }}>
-                    <span style={{ color: '#75beff', fontWeight: 'bold' }}>{variable.name}</span>
-                    <span style={{ opacity: 0.6, fontSize: '0.85em', marginLeft: '6px' }}>(Array)</span>
+            <div className="bg-(--vscode-editor-inactiveSelectionBackground) my-4 p-3 rounded-md">
+                <div className="mb-2.5">
+                    <span className="font-bold text-[#75beff]">{variable.name}</span>
+                    <span className="opacity-60 ml-1.5 text-[0.85em]">(Array)</span>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div className="flex flex-wrap gap-2">
                     {variable.elements.map((val, index) => {
                         const hasChanged = prevVar && prevVar.elements[index] !== val;
+
+                        const borderColor = hasChanged ? 'border-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'border-[var(--vscode-panel-border)]';
+                        const bgColor = hasChanged ? 'bg-[var(--vscode-editorInfo-foreground,#3794ff)]' : 'bg-transparent';
+                        const textColor = hasChanged ? 'text-white' : 'text-inherit';
+                        const scale = hasChanged ? 'scale-125' : 'scale-100';
+
                         return (
-                            <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <div style={{
-                                    width: '45px',
-                                    height: '45px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: '2px solid var(--vscode-panel-border)',
-                                    borderRadius: '4px',
-                                    fontWeight: 'bold',
-                                    transition: 'all 0.3s ease-out',
-                                    transform: hasChanged ? 'scale(1.2)' : 'scale(1)',
-                                    backgroundColor: hasChanged ? 'var(--vscode-editorInfo-foreground, #3794ff)' : 'transparent',
-                                    color: hasChanged ? '#fff' : 'inherit',
-                                }}>
+                            <div key={index} className="flex flex-col items-center">
+                                <div className={`w-11.25 h-11.25 flex items-center justify-center border-2 rounded-md font-bold transition-all duration-300 ease-out ${borderColor} ${scale} ${bgColor} ${textColor}`}>
                                     {val}
                                 </div>
-                                <span style={{ fontSize: '0.7em', marginTop: '4px', opacity: 0.7 }}>[{index}]</span>
+                                <span className="opacity-70 mt-1 text-[0.7em]">[{index}]</span>
                             </div>
                         );
                     })}
@@ -253,8 +173,8 @@ function VariableNode({ variable, prevVar }) {
 
     // primitive fallback
     return (
-        <div style={{ margin: '8px 0' }}>
-            <span style={{ color: '#75beff', fontWeight: 'bold' }}>{variable.name}:</span> {variable.value}
+        <div className="my-2">
+            <span className="font-bold text-[#75beff]">{variable.name}:</span> {variable.value}
         </div>
     );
 }
