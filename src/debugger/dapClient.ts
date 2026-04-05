@@ -32,7 +32,7 @@ const EXCLUDED_VARIABLE_NAMES = [
         (scope: any) => scope.name.toLowerCase() !== 'global'
     );
 
-    if (relevantScopes.length === 0) return [];
+    if (relevantScopes.length === 0) {return [];}
 
     let allVariables: RawVariable[] = [];
     for (const scope of relevantScopes) {

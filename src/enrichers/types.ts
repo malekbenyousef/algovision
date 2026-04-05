@@ -22,6 +22,12 @@ export interface ArrayVariable {
     elements: string[];
 }
 
+export interface Array2DVariable {
+    kind: 'array2d';
+    name: string;
+    rows: string[][];
+}
+
 export interface ObjectVariable {
     kind: 'object';
     name: string;
@@ -32,8 +38,8 @@ export interface ObjectVariable {
 export interface LinkedListVariable {
     kind: 'linkedList';
     name: string;
-    nodes: string[]; 
+    nodes: string[];
 }
 
 
-export type EnrichedVariable = PrimitiveVariable | ArrayVariable| ObjectVariable | LinkedListVariable;
+export type EnrichedVariable = PrimitiveVariable | ArrayVariable | Array2DVariable | ObjectVariable | LinkedListVariable;
