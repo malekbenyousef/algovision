@@ -33,13 +33,13 @@ export class LinkedListEnricher implements VariableEnricher {
         nodes: string[],
         depth: number
     ): Promise<void> {
-        if (depth > 100) return;
+        if (depth > 100) {return;}
 
         const children = await fetchChildren(session, variablesReference);
         const valueChild = children.find((c) => c.name === 'value' || c.name === 'val');
         const nextChild = children.find((c) => c.name === 'next');
 
-        if (!valueChild) return;
+        if (!valueChild) {return;}
         nodes.push(valueChild.value);
 
         if (nextChild && nextChild.variablesReference > 0 && nextChild.value !== 'null') {

@@ -30,7 +30,7 @@ export async function getEnrichedVariablesWithRetry(
             const activeSession = vscode.debug.activeDebugSession ?? session;
             return await getEnrichedVariables(activeSession);
         } catch (error) {
-            if (i === retries - 1) throw error;
+            if (i === retries - 1) {throw error;}
             await new Promise((resolve) => setTimeout(resolve, 150 * (i + 1)));
         }
     }
