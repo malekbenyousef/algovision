@@ -11,7 +11,10 @@ export async function getEnrichedVariables(
     const enriched = await Promise.all(
         rawVariables.map((variable) => {
             const enricher = enrichers.find((e) => e.canHandle(variable));
-            return enricher!.enrich(variable, session); 
+            if (!enricher) {
+                throw new Error(`No enricher matched variable "${variable.name}"`);
+            }
+            return enricher.enrich(variable, session);
         })
     );
 
