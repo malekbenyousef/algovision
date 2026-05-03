@@ -1,7 +1,7 @@
 {
   "name": "algovision",
   "displayName": "algovision",
-  "description": "",
+  "description": "Visualize algorithm state and memory changes live during debugging.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.109.0"
@@ -19,25 +19,26 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build:all",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "build:webview": "npm --prefix webview-ui run build",
+    "build:all": "npm run compile && npm run build:webview",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "npm run test:unit",
+    "test:unit": "vitest run src/**/*.unit.test.ts",
+    "test:integration": "vscode-test"
   },
   "devDependencies": {
-    "@types/acorn": "^4.0.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.109.0",
-    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1"
-  },
-  "dependencies": {
-    "acorn": "^8.16.0"
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^3.2.4"
   }
 }

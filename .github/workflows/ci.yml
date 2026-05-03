@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            webview-ui/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install webview dependencies
+        run: npm --prefix webview-ui ci
+
+      - name: Lint extension
+        run: npm run lint
+
+      - name: Compile extension
+        run: npm run compile
+
+      - name: Build webview
+        run: npm run build:webview
+
+      - name: Run unit tests
+        run: npm run test:unit

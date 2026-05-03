@@ -48,8 +48,7 @@ const EXCLUDED_VARIABLE_NAMES = [
     }
 for (const v of allVariables) {
     if (v.variablesReference > 0) {
-        const children = await fetchChildren(session, v.variablesReference);
-        console.log(`Children of ${v.name}:`, JSON.stringify(children, null, 2));
+        await fetchChildren(session, v.variablesReference);
     }
 }
     return allVariables;

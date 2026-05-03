@@ -3,6 +3,10 @@ import * as path from 'path';
 import { getEnrichedVariablesWithRetry } from './services/variableService';
 import { getWebviewContent } from './webview/webviewContent';
 
+type WebviewInboundMessage =
+    | { command: 'webviewReady' }
+    | { command: 'stepOver' };
+
 export function activate(context: vscode.ExtensionContext) {
     let panel: vscode.WebviewPanel | undefined = undefined;
 
@@ -34,10 +38,14 @@ export function activate(context: vscode.ExtensionContext) {
                 panel = createPanel(context);
                 panel.webview.onDidReceiveMessage(
                     async (message) => {
+                        if (!isWebviewInboundMessage(message)) {
+                            return;
+                        }
+
                         if (message.command === 'webviewReady') {
                             await pushVariablesToPanel(session, panel!);
                         } else if (message.command === 'stepOver') {
-                            vscode.commands.executeCommand('workbench.action.debug.stepOver');
+                            await vscode.commands.executeCommand('workbench.action.debug.stepOver');
                         }
                     },
                     undefined,
@@ -80,8 +88,6 @@ async function pushVariablesToPanel(
     panel.webview.postMessage({ command: 'status', text: 'Fetching...' });
     try {
         const variables = await getEnrichedVariablesWithRetry(session);
-
-        console.log('Sending to webview:', JSON.stringify(variables, null, 2));
         panel.webview.postMessage({ command: 'updateData', variables });
     } catch (error) {
         vscode.window.showErrorMessage(`AlgoVision fetch failed: ${error}`);
@@ -89,3 +95,12 @@ async function pushVariablesToPanel(
 }
 
 export function deactivate() {}
+
+function isWebviewInboundMessage(value: unknown): value is WebviewInboundMessage {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    const command = (value as { command?: unknown }).command;
+    return command === 'webviewReady' || command === 'stepOver';
+}

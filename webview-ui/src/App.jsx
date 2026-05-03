@@ -7,6 +7,19 @@ import PrimitiveVisualizer from './components/PrimitiveVisualizer';
 
 const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
 
+function isEnrichedVariable(variable) {
+	if (!variable || typeof variable !== 'object' || typeof variable.name !== 'string' || typeof variable.kind !== 'string') {
+		return false;
+	}
+	return ['primitive', 'array', 'array2d', 'object', 'linkedList'].includes(variable.kind);
+}
+
+function isUpdateDataMessage(message) {
+	return message?.command === 'updateData' &&
+		Array.isArray(message.variables) &&
+		message.variables.every(isEnrichedVariable);
+}
+
 function App() {
 	const [variables, setVariables] = useState([]);
 	const [isPlaying, setIsPlaying] = useState(false);
@@ -15,7 +28,7 @@ function App() {
 	useEffect(() => {
 		const handleMessage = (event) => {
 			const message = event.data;
-			if (message.command === 'updateData') {
+			if (isUpdateDataMessage(message)) {
 				setVariables((currentVars) => {
 					setPreviousVariables(currentVars);
 					return message.variables;
