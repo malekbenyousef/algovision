@@ -1,22 +1,50 @@
 {
   "name": "algovision",
-  "displayName": "algovision",
-  "description": "Visualize algorithm state and memory changes live during debugging.",
-  "version": "0.0.1",
+  "displayName": "AlgoVision",
+  "description": "Real-time interactive visualization of data structures and memory states during debugging.",
+  "version": "1.0.0",
+  "publisher": "algovision",
+  "icon": "assets/icon.png",
   "engines": {
     "vscode": "^1.109.0"
   },
   "categories": [
+    "Debuggers",
+    "Education",
+    "Visualization",
     "Other"
+  ],
+  "keywords": [
+    "debugger",
+    "visualization",
+    "data structures",
+    "education",
+    "algorithms",
+    "linked list",
+    "binary tree",
+    "array"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "algovision.visualize",
-        "title": "AlgoVision: Visualize JavaScript Code"
+        "title": "AlgoVision: Open Visualizer Panel",
+        "category": "AlgoVision"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "AlgoVision",
+      "properties": {
+        "algovision.playbackSpeedMs": {
+          "type": "number",
+          "default": 400,
+          "minimum": 100,
+          "maximum": 5000,
+          "description": "Auto-play step interval in milliseconds. Lower values step faster."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build:all",
@@ -26,6 +54,7 @@
     "build:all": "npm run compile && npm run build:webview",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "npm run test:unit",
     "test:unit": "vitest run src/**/*.unit.test.ts",
     "test:integration": "vscode-test"
@@ -37,11 +66,9 @@
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
+    "prettier": "^3.8.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "reactflow": "^11.11.4"
   }
 }

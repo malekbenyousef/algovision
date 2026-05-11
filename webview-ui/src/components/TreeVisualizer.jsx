@@ -102,12 +102,11 @@ function BSTNode({ data }) {
 const nodeTypes = { bstNode: BSTNode };
 
 // ─── Layout Builder ──────────────────────────────────────────────────────────
-let nodeId = 0;
-
-function buildGraph(node, prevNode, nodes, edges, x, y, xOffset) {
+// counter is a mutable ref object { current: number } created fresh per render
+function buildGraph(node, prevNode, nodes, edges, x, y, xOffset, counter) {
   if (!node) return null;
 
-  const id = `node-${nodeId++}`;
+  const id = `node-${counter.current++}`;
   const hasChanged = prevNode ? prevNode.value !== node.value : true;
 
   nodes.push({
@@ -124,7 +123,7 @@ function buildGraph(node, prevNode, nodes, edges, x, y, xOffset) {
   if (node.left || node.right) {
     // Left child or ghost
     if (node.left) {
-      const leftId = buildGraph(node.left, prevNode?.left, nodes, edges, x - xOffset, childY, half);
+      const leftId = buildGraph(node.left, prevNode?.left, nodes, edges, x - xOffset, childY, half, counter);
       edges.push({
         id: `e-${id}-${leftId}`,
         source: id,
@@ -150,7 +149,7 @@ function buildGraph(node, prevNode, nodes, edges, x, y, xOffset) {
         labelBgStyle: { fill: 'transparent' },
       });
     } else {
-      const ghostId = `ghost-${nodeId++}`;
+      const ghostId = `ghost-${counter.current++}`;
       nodes.push({
         id: ghostId,
         type: 'bstNode',
@@ -175,7 +174,7 @@ function buildGraph(node, prevNode, nodes, edges, x, y, xOffset) {
 
     // Right child or ghost
     if (node.right) {
-      const rightId = buildGraph(node.right, prevNode?.right, nodes, edges, x + xOffset, childY, half);
+      const rightId = buildGraph(node.right, prevNode?.right, nodes, edges, x + xOffset, childY, half, counter);
       edges.push({
         id: `e-${id}-${rightId}`,
         source: id,
@@ -201,7 +200,7 @@ function buildGraph(node, prevNode, nodes, edges, x, y, xOffset) {
         labelBgStyle: { fill: 'transparent' },
       });
     } else {
-      const ghostId = `ghost-${nodeId++}`;
+      const ghostId = `ghost-${counter.current++}`;
       nodes.push({
         id: ghostId,
         type: 'bstNode',
@@ -233,13 +232,13 @@ export default function TreeVisualizer({ variable, prevVar }) {
   const { initialNodes, initialEdges } = useMemo(() => {
     if (!variable?.root) return { initialNodes: [], initialEdges: [] };
 
-    nodeId = 0;
+    const counter = { current: 0 }; // fresh counter per render — no shared mutable state
     const nodes = [];
     const edges = [];
     const isInitialRender = !prevVar;
     const prevRoot = isInitialRender ? variable.root : prevVar?.root;
 
-    buildGraph(variable.root, prevRoot, nodes, edges, 0, 0, 160);
+    buildGraph(variable.root, prevRoot, nodes, edges, 0, 0, 160, counter);
     return { initialNodes: nodes, initialEdges: edges };
   }, [variable, prevVar]);
 

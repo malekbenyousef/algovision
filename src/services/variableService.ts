@@ -12,7 +12,9 @@ export async function getEnrichedVariables(
         rawVariables.map((variable) => {
             const enricher = enrichers.find((e) => e.canHandle(variable));
             if (!enricher) {
-                throw new Error(`No enricher matched variable "${variable.name}"`);
+                // Graceful fallback: log a warning and treat as primitive rather than crashing.
+                console.warn(`[AlgoVision] No enricher matched variable "${variable.name}" (value: ${variable.value}). Falling back to primitive.`);
+                return Promise.resolve({ kind: 'primitive' as const, name: variable.name, value: variable.value });
             }
             return enricher.enrich(variable, session);
         })

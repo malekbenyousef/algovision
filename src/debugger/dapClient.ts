@@ -9,15 +9,16 @@ export interface RawVariable {
 }
 
 export async function fetchRawVariables(session: vscode.DebugSession): Promise<RawVariable[]> {
-const EXCLUDED_VARIABLE_NAMES = [
-    'Return value',
-    'this',
-    '__dirname',
-    '__filename',
-    'exports',
-    'module',
-    'require',
-];
+    const EXCLUDED_VARIABLE_NAMES = [
+        'Return value',
+        'this',
+        '__dirname',
+        '__filename',
+        'exports',
+        'module',
+        'require',
+    ];
+
     const threadsResponse = await session.customRequest('threads');
     const threadId = threadsResponse.threads[0].id;
 
@@ -32,7 +33,7 @@ const EXCLUDED_VARIABLE_NAMES = [
         (scope: any) => scope.name.toLowerCase() !== 'global'
     );
 
-    if (relevantScopes.length === 0) {return [];}
+    if (relevantScopes.length === 0) { return []; }
 
     let allVariables: RawVariable[] = [];
     for (const scope of relevantScopes) {
@@ -40,17 +41,13 @@ const EXCLUDED_VARIABLE_NAMES = [
             variablesReference: scope.variablesReference,
         });
         const filtered = variablesResponse.variables.filter(
-            (v: any) => !EXCLUDED_VARIABLE_NAMES.includes(v.name) &&
-        !v.value.startsWith('ƒ') &&
-        !v.value.startsWith('class')
+            (v: any) =>
+                !EXCLUDED_VARIABLE_NAMES.includes(v.name) &&
+                !v.value.startsWith('ƒ') &&
+                !v.value.startsWith('class')
         );
         allVariables = allVariables.concat(filtered);
     }
-for (const v of allVariables) {
-    if (v.variablesReference > 0) {
-        await fetchChildren(session, v.variablesReference);
-    }
-}
     return allVariables;
 }
 
