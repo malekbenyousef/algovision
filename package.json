@@ -40,5 +40,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "reactflow": "^11.11.4"
   }
 }

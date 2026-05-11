@@ -9,23 +9,46 @@ export interface LinkedListNode {
 
 
 export class LinkedListEnricher implements VariableEnricher {
-    canHandle(variable: RawVariable): boolean {
-        return (
-            variable.variablesReference > 0 &&
-            /^\w+ \{.*next:/.test(variable.value)
-        );
+canHandle(variable: RawVariable): boolean {
+    return (
+        variable.variablesReference > 0 &&
+        // Updated regex to look for either 'next' or 'head'
+        /^\w+ \{.*(next|head):/.test(variable.value)
+    );
+}
+
+async enrich(variable: RawVariable, session: vscode.DebugSession): Promise<LinkedListVariable> {
+    const nodes: string[] = [];
+    let startReference = variable.variablesReference;
+
+    // Fetch the top-level properties of the variable
+    const initialChildren = await fetchChildren(session, startReference);
+    
+    // Check if this is a wrapper class containing a 'head' property
+    const headChild = initialChildren.find(c => c.name === 'head');
+
+    if (headChild) {
+        // If 'head' is null, the list is empty
+        if (headChild.value === 'null' || headChild.variablesReference === 0) {
+            return {
+                kind: 'linkedList',
+                name: variable.name,
+                nodes: []
+            };
+        }
+        // Otherwise, shift our starting point to the actual first Node
+        startReference = headChild.variablesReference;
     }
 
-    async enrich(variable: RawVariable, session: vscode.DebugSession): Promise<LinkedListVariable> {
-        const nodes: string[] = [];
-        await this.traverse(variable.variablesReference, session, nodes, 0);
+    // Begin standard traversal starting from the first actual Node
+    await this.traverse(startReference, session, nodes, 0);
 
-        return {
-            kind: 'linkedList',
-            name: variable.name,
-            nodes,
-        };
-    }
+    return {
+        kind: 'linkedList',
+        name: variable.name,
+        nodes,
+    };
+}
 
     private async traverse(
         variablesReference: number,
