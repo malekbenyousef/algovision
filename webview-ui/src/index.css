@@ -1,12 +1,77 @@
 @import "tailwindcss";
 
-/* Base VS Code Webview Sync */
+/* ─── AlgoVision Design System ───────────────────────────────────────────── */
+:root {
+  /* Brand blues */
+  --av-blue-primary:  #3794ff;
+  --av-blue-glow:     rgba(55, 148, 255, 0.35);
+  --av-blue-subtle:   rgba(55, 148, 255, 0.10);
+  --av-blue-label:    #75beff;
+
+  /* Surfaces */
+  --av-surface-1:     var(--vscode-editor-background, #1a1b26);
+  --av-surface-2:     var(--vscode-editor-inactiveSelectionBackground, #1e2030);
+  --av-surface-header: rgba(0, 0, 0, 0.22);
+
+  /* Text */
+  --av-text-primary:  var(--vscode-editor-foreground, #cdd6f4);
+  --av-text-muted:    rgba(255, 255, 255, 0.45);
+  --av-text-faint:    rgba(255, 255, 255, 0.22);
+
+  /* Borders */
+  --av-border-subtle:  rgba(255, 255, 255, 0.07);
+  --av-border-default: rgba(255, 255, 255, 0.12);
+
+  /* Radii */
+  --av-radius-sm: 6px;
+  --av-radius-md: 10px;
+  --av-radius-lg: 14px;
+
+  /* Typography */
+  --av-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+
+  /* Per-kind accent colors */
+  --av-kind-primitive: #94a3b8;
+  --av-kind-array:     #4ade80;
+  --av-kind-array2d:   #a78bfa;
+  --av-kind-object:    #fb923c;
+  --av-kind-linkedList:#38bdf8;
+  --av-kind-tree:      #3794ff;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 body {
   font-family: var(--vscode-editor-font-family), ui-sans-serif, system-ui, sans-serif;
-  font-size: var(--vscode-editor-font-size);
-  color: var(--vscode-editor-foreground);
-  background-color: var(--vscode-editor-background);
-  padding: 20px;
+  font-size: var(--vscode-editor-font-size, 13px);
+  color: var(--av-text-primary);
+  background-color: var(--av-surface-1);
+  padding: 14px 16px 32px;
   margin: 0;
   line-height: 1.6;
+}
+
+/* ─── Skeleton shimmer ───────────────────────────────────────────────────── */
+@keyframes av-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.av-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--av-surface-2) 25%,
+    rgba(255,255,255,0.05) 50%,
+    var(--av-surface-2) 75%
+  );
+  background-size: 400px 100%;
+  animation: av-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--av-radius-sm);
+}
+
+/* ─── Cell / node highlight ─────────────────────────────────────────────── */
+.av-cell-changed {
+  background: var(--av-blue-primary) !important;
+  border-color: var(--av-blue-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px var(--av-blue-glow);
 }

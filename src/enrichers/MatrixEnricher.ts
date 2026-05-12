@@ -5,24 +5,23 @@ import { VariableEnricher, Array2DVariable } from './types';
 /**
  * MatrixEnricher handles 2D arrays (arrays of arrays).
  *
- * Detection strategy: the variable must be an array whose string representation
- * contains nested sub-arrays. Node.js renders these as:
- *   "[ [Array], [Array] ]"  or  "[ [ 1, 2 ], [ 3, 4 ] ]"
+ * Node.js can represent a 2D array's value in several formats:
+ *   "[ [Array], [Array] ]"       — long rows (≥ ~7 elements)
+ *   "[ [ 1, 2 ], [ 3, 4 ] ]"    — short rows shown inline
+ *   "[ Array(4), Array(4) ]"     — another compact form (no square brackets)
  *
- * This enricher is registered BEFORE ArrayEnricher so that 2D arrays are
- * claimed here instead of falling into ArrayEnricher.enrich() which would
- * then need an extra DAP round-trip to determine dimensionality.
+ * We detect by checking the value string AND by peeking at children
+ * to confirm they are themselves array references.
  */
 export class MatrixEnricher implements VariableEnricher {
     canHandle(variable: RawVariable): boolean {
         if (variable.variablesReference === 0) { return false; }
         if (variable.type !== 'Array' && !variable.value.startsWith('[')) { return false; }
 
-        // Node.js signals nested arrays by printing "[Array]" as a child placeholder,
-        // or by having multiple sub-arrays in the value string.
         return (
-            variable.value.includes('[Array]') ||
-            /\[\s*\[/.test(variable.value)
+            variable.value.includes('[Array]') ||   // "[ [Array], [Array] ]"
+            variable.value.includes('Array(')  ||   // "[ Array(4), Array(4) ]"
+            /\[\s*\[/.test(variable.value)          // "[ [ 1, 2 ], [ 3, 4 ] ]"
         );
     }
 
@@ -33,7 +32,6 @@ export class MatrixEnricher implements VariableEnricher {
         const rows: string[][] = [];
         for (const rowVar of numericChildren) {
             if (rowVar.variablesReference === 0) {
-                // Flat value — treat as a single-element row (edge case)
                 rows.push([rowVar.value]);
                 continue;
             }
@@ -44,10 +42,6 @@ export class MatrixEnricher implements VariableEnricher {
             rows.push(elements);
         }
 
-        return {
-            kind: 'array2d',
-            name: variable.name,
-            rows,
-        };
+        return { kind: 'array2d', name: variable.name, rows };
     }
 }

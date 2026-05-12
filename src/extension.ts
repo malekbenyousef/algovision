@@ -5,7 +5,10 @@ import { getWebviewContent } from './webview/webviewContent';
 
 type WebviewInboundMessage =
     | { command: 'webviewReady' }
-    | { command: 'stepOver' };
+    | { command: 'stepOver' }
+    | { command: 'stepInto' }
+    | { command: 'continue' }
+    | { command: 'restart' };
 
 export function activate(context: vscode.ExtensionContext) {
     let panel: vscode.WebviewPanel | undefined = undefined;
@@ -38,14 +41,22 @@ export function activate(context: vscode.ExtensionContext) {
                 panel = createPanel(context);
                 panel.webview.onDidReceiveMessage(
                     async (message) => {
-                        if (!isWebviewInboundMessage(message)) {
-                            return;
-                        }
+                        if (!isWebviewInboundMessage(message)) { return; }
 
                         if (message.command === 'webviewReady') {
+                            // Send settings to the webview before pushing variables
+                            const cfg = vscode.workspace.getConfiguration('algovision');
+                            const playbackSpeedMs = cfg.get<number>('playbackSpeedMs', 400);
+                            panel!.webview.postMessage({ command: 'init', playbackSpeedMs });
                             await pushVariablesToPanel(session, panel!);
                         } else if (message.command === 'stepOver') {
                             await vscode.commands.executeCommand('workbench.action.debug.stepOver');
+                        } else if (message.command === 'stepInto') {
+                            await vscode.commands.executeCommand('workbench.action.debug.stepInto');
+                        } else if (message.command === 'continue') {
+                            await vscode.commands.executeCommand('workbench.action.debug.continue');
+                        } else if (message.command === 'restart') {
+                            await vscode.commands.executeCommand('workbench.action.debug.restart');
                         }
                     },
                     undefined,
@@ -97,10 +108,11 @@ async function pushVariablesToPanel(
 export function deactivate() {}
 
 function isWebviewInboundMessage(value: unknown): value is WebviewInboundMessage {
-    if (!value || typeof value !== 'object') {
-        return false;
-    }
-
+    if (!value || typeof value !== 'object') { return false; }
     const command = (value as { command?: unknown }).command;
-    return command === 'webviewReady' || command === 'stepOver';
+    return command === 'webviewReady' ||
+        command === 'stepOver'  ||
+        command === 'stepInto'  ||
+        command === 'continue'  ||
+        command === 'restart';
 }

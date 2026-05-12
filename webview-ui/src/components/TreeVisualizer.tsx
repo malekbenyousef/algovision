@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -9,6 +9,7 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import VisualizerCard from './VisualizerCard';
 
 // ─── Custom Node ────────────────────────────────────────────────────────────
 function BSTNode({ data }) {
@@ -242,76 +243,29 @@ export default function TreeVisualizer({ variable, prevVar }) {
     return { initialNodes: nodes, initialEdges: edges };
   }, [variable, prevVar]);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Sync ReactFlow state when variable changes (new debug step)
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   if (!variable?.root) return null;
 
-  return (
-    <div style={{
-      margin: '16px 0',
-      borderRadius: 10,
-      overflow: 'hidden',
-      background: 'var(--vscode-editor-inactiveSelectionBackground, #252535)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      display: 'flex',
-      flexDirection: 'column',
-      height: 420,
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: '10px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        background: 'rgba(0,0,0,0.2)',
-        flexShrink: 0,
-      }}>
-        <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontWeight: 700,
-          color: '#75beff',
-          fontSize: 13,
-        }}>
-          {variable.name}
-        </span>
-        <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11,
-          color: 'rgba(255,255,255,0.35)',
-        }}>
-          Binary Tree
-        </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: '#3794ff',
-            boxShadow: '0 0 6px #3794ff',
-            display: 'inline-block',
-          }} />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
-            changed
-          </span>
-          <span style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: '#2a2d3e',
-            border: '1.5px solid rgba(255,255,255,0.2)',
-            display: 'inline-block',
-            marginLeft: 8,
-          }} />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
-            unchanged
-          </span>
-        </div>
-      </div>
+  const hasChanged = initialNodes.some(n => n.data?.hasChanged);
 
-      {/* Flow canvas */}
-      <div style={{ flex: 1 }}>
+  return (
+    <VisualizerCard
+      name={variable.name}
+      kindLabel="Binary Tree"
+      kindColor="var(--av-kind-tree)"
+      hasChanged={hasChanged}
+      noPadding
+    >
+      {/* ReactFlow canvas */}
+      <div style={{ height: 400 }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -324,15 +278,9 @@ export default function TreeVisualizer({ variable, prevVar }) {
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
           style={{ background: 'transparent' }}
-          defaultEdgeOptions={{
-            type: 'smoothstep',
-          }}
+          defaultEdgeOptions={{ type: 'smoothstep' }}
         >
-          <Background
-            color="rgba(255,255,255,0.04)"
-            gap={24}
-            size={1}
-          />
+          <Background color="rgba(255,255,255,0.04)" gap={24} size={1} />
           <Controls
             style={{
               background: 'rgba(30,32,46,0.9)',
@@ -342,6 +290,6 @@ export default function TreeVisualizer({ variable, prevVar }) {
           />
         </ReactFlow>
       </div>
-    </div>
+    </VisualizerCard>
   );
 }
