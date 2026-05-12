@@ -41,5 +41,24 @@ export interface LinkedListVariable {
     nodes: string[];
 }
 
+export interface TreeNodeData {
+    value: string;
+    left: TreeNodeData | null;
+    right: TreeNodeData | null;
+    variablesReference: number;
+}
 
-export type EnrichedVariable = PrimitiveVariable | ArrayVariable | Array2DVariable | ObjectVariable | LinkedListVariable;
+export interface TreeVariable {
+    kind: 'tree';
+    name: string;
+    root: TreeNodeData | null;
+}
+
+export interface GraphVariable {
+    kind: 'graph';
+    name: string;
+    nodes: string[];
+    edges: { source: string; target: string }[];
+}
+
+export type EnrichedVariable = PrimitiveVariable | ArrayVariable | Array2DVariable | ObjectVariable | LinkedListVariable | TreeVariable | TreeNodeData | GraphVariable;

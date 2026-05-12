@@ -40,10 +40,12 @@ describe('enrichers', () => {
     it('enriches linked lists by following next pointers', async () => {
         const enricher = new LinkedListEnricher();
         fetchChildrenMock
+            // 1st call: enrich() fetches initialChildren (ref 200) — no 'head' found, used directly
             .mockResolvedValueOnce([
                 { name: 'value', value: '1', variablesReference: 0 },
                 { name: 'next', value: 'Node', variablesReference: 201 },
             ] as RawVariable[])
+            // 2nd call: traverse() recurses to ref 201
             .mockResolvedValueOnce([
                 { name: 'value', value: '2', variablesReference: 0 },
                 { name: 'next', value: 'null', variablesReference: 0 },
