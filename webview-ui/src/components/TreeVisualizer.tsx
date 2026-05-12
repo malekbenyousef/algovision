@@ -281,11 +281,17 @@ export default function TreeVisualizer({ variable, prevVar }) {
           defaultEdgeOptions={{ type: 'smoothstep' }}
         >
           <Background color="rgba(255,255,255,0.04)" gap={24} size={1} />
-          <Controls
+          <Controls 
+            className="av-react-flow-controls"
             style={{
               background: 'rgba(30,32,46,0.9)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              padding: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
             }}
           />
         </ReactFlow>

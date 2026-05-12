@@ -37,6 +37,7 @@
   --av-kind-object:    #fb923c;
   --av-kind-linkedList:#38bdf8;
   --av-kind-tree:      #3794ff;
+  --av-kind-graph:     #a855f7;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -74,4 +75,20 @@ body {
   border-color: var(--av-blue-primary) !important;
   color: #fff !important;
   box-shadow: 0 0 12px var(--av-blue-glow);
+}
+
+/* ─── ReactFlow Controls Overrides ───────────────────────────────────────── */
+.av-react-flow-controls .react-flow__controls-button {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  fill: var(--av-text-muted) !important;
+  transition: all 0.2s ease;
+}
+.av-react-flow-controls .react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+.av-react-flow-controls .react-flow__controls-button:hover {
+  background: rgba(255,255,255,0.08) !important;
+  fill: var(--av-text-primary) !important;
 }

@@ -9,6 +9,7 @@ import ObjectVisualizer     from './components/ObjectVisualizer';
 import ArrayVisualizer      from './components/ArrayVisualizer';
 import MatrixVisualizer     from './components/MatrixVisualizer';
 import TreeVisualizer       from './components/TreeVisualizer';
+import GraphVisualizer      from './components/GraphVisualizer';
 
 const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
 
@@ -136,7 +137,11 @@ function CtrlBtn({ icon: Icon, label, onClick, active = false, disabled = false 
 function SettingsPopover({ speedMs, onSpeedChange, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    const handler = (e) => { 
+      if (ref.current && !ref.current.contains(e.target) && !e.target.closest('#av-settings-btn')) {
+        onClose(); 
+      }
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
@@ -242,8 +247,9 @@ export default function App() {
     const prev = previousVariables.find(p => p.name === variable.name);
     const props = { key: variable.name, variable, prevVar: prev };
     switch (variable.kind) {
-      case 'tree':       return <TreeVisualizer      {...props} />;
+      case 'tree':       return <TreeVisualizer       {...props} />;
       case 'linkedList': return <LinkedListVisualizer {...props} />;
+      case 'graph':      return <GraphVisualizer      {...props} />;
       case 'object':     return <ObjectVisualizer     {...props} />;
       case 'array2d':    return <MatrixVisualizer     {...props} />;
       case 'array':      return <ArrayVisualizer      {...props} />;
@@ -282,23 +288,25 @@ export default function App() {
             borderRadius: 10, padding: '4px 6px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
           }}>
-            <CtrlBtn icon={ChevronLeft}                  label="Step Back"           onClick={() => { setIsPlaying(false); stepBack(); }} disabled={currentIndex <= 0} />
-            <CtrlBtn icon={isPlaying ? Pause : Play}     label={isPlaying ? 'Pause' : 'Auto-Play'} active={isPlaying} onClick={() => setIsPlaying(p => !p)} />
-            <CtrlBtn icon={ChevronRight}                 label="Step Forward"        onClick={() => { setIsPlaying(false); if (currentIndex < history.length - 1) stepForward(); else sendCommand('stepOver'); }} />
+            <CtrlBtn icon={ChevronLeft}                  label="Step Back"           onClick={() => { setIsPlaying(false); stepBack(); }} disabled={currentIndex <= 0 || !hasData} />
+            <CtrlBtn icon={isPlaying ? Pause : Play}     label={isPlaying ? 'Pause' : 'Auto-Play'} active={isPlaying} onClick={() => setIsPlaying(p => !p)} disabled={!hasData} />
+            <CtrlBtn icon={ChevronRight}                 label="Step Forward"        onClick={() => { setIsPlaying(false); if (currentIndex < history.length - 1) stepForward(); else sendCommand('stepOver'); }} disabled={!hasData} />
           </div>
         </div>
 
         {/* Right: Actions + Settings */}
         <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'relative' }}>
           <CtrlBtn icon={RotateCcw} label="Restart Session" onClick={() => { setIsPlaying(false); resetHistory(); if (vscode) vscode.postMessage({ command: 'restart' }); }} />
-          <CtrlBtn icon={Settings2} label="Settings" active={isSettingsOpen} onClick={() => setIsSettingsOpen(s => !s)} />
+          <div id="av-settings-btn">
+            <CtrlBtn icon={Settings2} label="Settings" active={isSettingsOpen} onClick={() => setIsSettingsOpen(s => !s)} />
+          </div>
 
           {/* Settings popover */}
           <AnimatePresence>
             {isSettingsOpen && (
               <SettingsPopover
                 speedMs={playbackSpeedMs}
-                onSpeedChange={(ms) => { setSpeedMs(ms); setIsSettingsOpen(false); }}
+                onSpeedChange={(ms) => { setSpeedMs(ms); }}
                 onClose={() => setIsSettingsOpen(false)}
               />
             )}

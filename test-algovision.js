@@ -178,3 +178,70 @@
 
     debugger; // ← PAUSE FINAL: complete 7-node BST
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SECTION 6 — Graph (Adjacency List + BFS Shortest Path)
+//  Expected AlgoVision view:
+//    graph: nodes appear one by one — dagre re-layouts on EVERY step,
+//           so ALL existing nodes shift position as the graph grows.
+//    After the full graph is built, BFS runs step by step from node "A".
+// ════════════════════════════════════════════════════════════════════════════
+{
+    // ── Step 1: Start with a single node ────────────────────────────────────
+    const graph = { "A": [] };
+    debugger; // ← PAUSE: graph has 1 node
+
+    // ── Step 2: Add B, connect A → B ────────────────────────────────────────
+    graph["B"] = [];
+    graph["A"].push("B");
+    debugger; // ← PAUSE: A → B
+
+    // ── Step 3: Add C, connect A → C ────────────────────────────────────────
+    graph["C"] = [];
+    graph["A"].push("C");
+    debugger; // ← PAUSE: A → B, A → C (fan-out from A)
+
+    // ── Step 4: Add D, connect B → D and C → D (classic diamond) ───────────
+    graph["D"] = [];
+    graph["B"].push("D");
+    graph["C"].push("D");
+    debugger; // ← PAUSE: Diamond: A→B→D, A→C→D
+
+    // ── Step 5: Add E, connect C → E ────────────────────────────────────────
+    graph["E"] = [];
+    graph["C"].push("E");
+    debugger; // ← PAUSE: C branches to both D and E
+
+    // ── Step 6: Add F, connect D → F and E → F ──────────────────────────────
+    graph["F"] = [];
+    graph["D"].push("F");
+    graph["E"].push("F");
+    debugger; // ← PAUSE: Two paths converge at F
+
+    // ── Step 7: Add G, connect F → G (extend the chain) ─────────────────────
+    graph["G"] = [];
+    graph["F"].push("G");
+    debugger; // ← PAUSE: Full 7-node DAG is complete!
+
+    // ── BFS Shortest Path from "A" ───────────────────────────────────────────
+    //  Watch the queue drain level by level — this is the core of BFS.
+    const bfsOrder  = [];
+    const distances = { "A": 0 };
+    const queue     = ["A"];
+
+    while (queue.length > 0) {
+        const node = queue.shift();
+        bfsOrder.push(node);
+
+        debugger; // ← PAUSE BFS: node is dequeued, bfsOrder grows
+
+        for (const neighbor of graph[node]) {
+            if (!(neighbor in distances)) {
+                distances[neighbor] = distances[node] + 1;
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    debugger; // ← PAUSE: BFS complete — distances holds shortest path from A to every node
+}

@@ -4,7 +4,7 @@ import { VariableEnricher, TreeVariable, TreeNodeData } from './types';
 
 export class TreeEnricher implements VariableEnricher {
   canHandle(variable: RawVariable): boolean {
-  if (variable.variablesReference === 0) return false;
+  if (variable.variablesReference === 0) { return false; }
   
   const val = variable.value;
   const name = variable.name;
@@ -55,16 +55,16 @@ export class TreeEnricher implements VariableEnricher {
   session: vscode.DebugSession,
   depth: number
 ): Promise<TreeNodeData | null> {
-  if (depth > 20 || variablesReference === 0) return null;
+  if (depth > 20 || variablesReference === 0) { return null; }
 
   const children = await fetchChildren(session, variablesReference);
-  if (!children || children.length === 0) return null;  // ← add this
+  if (!children || children.length === 0) { return null; }
 
   const valueChild = children.find(c => c.name === 'value' || c.name === 'val');
   const leftChild  = children.find(c => c.name === 'left');
   const rightChild = children.find(c => c.name === 'right');
 
-  if (!valueChild) return null;
+  if (!valueChild) { return null; }
 
   // Node.js sometimes wraps the value, strip quotes
   const rawValue = valueChild.value.replace(/^["']|["']$/g, '');
