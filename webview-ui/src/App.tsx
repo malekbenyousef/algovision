@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Play, Pause, SkipBack, ChevronRight, ChevronDown,
+  Play, Pause, ChevronLeft, ChevronRight,
   RotateCcw, Cpu, Settings2, Zap, Gauge, Snail,
 } from 'lucide-react';
 import LinkedListVisualizer from './components/LinkedListVisualizer';
@@ -11,11 +11,6 @@ import MatrixVisualizer     from './components/MatrixVisualizer';
 import TreeVisualizer       from './components/TreeVisualizer';
 
 const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
-
-const VALID_KINDS = ['primitive', 'array', 'array2d', 'object', 'linkedList', 'tree'];
-function isEnrichedVariable(v) {
-  return v && typeof v === 'object' && typeof v.name === 'string' && VALID_KINDS.includes(v.kind);
-}
 
 // ─── Speed presets ────────────────────────────────────────────────────────────
 const SPEED_PRESETS = [
@@ -125,14 +120,14 @@ function CtrlBtn({ icon: Icon, label, onClick, active = false, disabled = false 
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 28, height: 28, borderRadius: 5, padding: 0,
-        border: active ? '1.5px solid var(--av-blue-primary)' : `1.5px solid ${hov && !disabled ? 'var(--av-border-default)' : 'transparent'}`,
-        background: active ? 'var(--av-blue-subtle)' : hov && !disabled ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: disabled ? 'rgba(255,255,255,0.18)' : hov && !disabled ? 'var(--av-blue-label)' : active ? 'var(--av-blue-primary)' : 'var(--av-text-muted)',
+        width: 36, height: 36, borderRadius: 8, padding: 0, // Bigger buttons
+        border: active ? '1.5px solid var(--av-blue-primary)' : `1.5px solid ${hov && !disabled ? 'var(--av-blue-primary)' : 'transparent'}`,
+        background: active ? 'var(--av-blue-subtle)' : hov && !disabled ? 'var(--av-blue-subtle)' : 'transparent',
+        color: disabled ? 'rgba(255,255,255,0.15)' : 'var(--av-blue-primary)', // Blue theme
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.15s ease',
       }}>
-      <Icon size={14} strokeWidth={2.3} />
+      <Icon size={18} strokeWidth={2.5} />
     </button>
   );
 }
@@ -186,23 +181,26 @@ function SettingsPopover({ speedMs, onSpeedChange, onClose }) {
   );
 }
 
+import { useAlgoVisionStore } from './store/useAlgoVisionStore';
+
 // ─── Main App ────────────────────────────────────────────────────────────────
 export default function App() {
-  const [state, setState]   = useState({ variables: [], previousVariables: [] });
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [status, setStatus] = useState('idle');
-  const [hasData, setHasData] = useState(false);
-  const [speedMs, setSpeedMs] = useState(400);
-  const [showSettings, setShowSettings] = useState(false);
+  const {
+    variables, previousVariables, history, currentIndex,
+    isPlaying, playbackSpeedMs, status, hasData,
+    pushSnapshot, stepBack, stepForward, setIsPlaying, setSpeedMs, setStatus, setHasData, resetHistory
+  } = useAlgoVisionStore();
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event) => {
       const msg = event.data;
       if (!msg?.command) return;
-      if (msg.command === 'updateData' && Array.isArray(msg.variables) && msg.variables.every(isEnrichedVariable)) {
+      if (msg.command === 'updateData' && Array.isArray(msg.variables)) {
         setStatus('idle');
         setHasData(true);
-        setState(cur => ({ previousVariables: cur.variables, variables: msg.variables }));
+        pushSnapshot(msg.variables);
       } else if (msg.command === 'status') {
         setStatus('fetching');
       } else if (msg.command === 'error') {
@@ -214,25 +212,34 @@ export default function App() {
     window.addEventListener('message', handleMessage);
     if (vscode) vscode.postMessage({ command: 'webviewReady' });
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [pushSnapshot, setStatus, setHasData, setIsPlaying, setSpeedMs]);
 
   const sendCommand = useCallback((command) => {
     if (vscode) vscode.postMessage({ command });
     setStatus('fetching');
-  }, []);
+  }, [setStatus]);
 
+  // If we stepped back manually, and then try to step over, we should jump to the real end and trigger the debugger.
+  // Wait, if we are in history, Play/Pause should stepForward through history instead of calling vscode.
+  // We can modify the auto-play loop to step forward if there's history, otherwise fetch from vscode.
   useEffect(() => {
     if (!isPlaying) return;
-    const t = setTimeout(() => sendCommand('stepOver'), speedMs);
+    const t = setTimeout(() => {
+      if (currentIndex < history.length - 1) {
+        stepForward();
+      } else {
+        sendCommand('stepOver');
+      }
+    }, playbackSpeedMs);
     return () => clearTimeout(t);
-  }, [state.variables, isPlaying, speedMs, sendCommand]);
+  }, [isPlaying, playbackSpeedMs, sendCommand, currentIndex, history.length, stepForward]);
 
   // Separate primitives from complex data structures
-  const primitives   = state.variables.filter(v => v.kind === 'primitive');
-  const complexVars  = state.variables.filter(v => v.kind !== 'primitive');
+  const primitives   = variables.filter(v => v.kind === 'primitive');
+  const complexVars  = variables.filter(v => v.kind !== 'primitive');
 
   const renderComplex = (variable) => {
-    const prev = state.previousVariables.find(p => p.name === variable.name);
+    const prev = previousVariables.find(p => p.name === variable.name);
     const props = { key: variable.name, variable, prevVar: prev };
     switch (variable.kind) {
       case 'tree':       return <TreeVisualizer      {...props} />;
@@ -249,44 +256,50 @@ export default function App() {
 
       {/* ── Top bar ── */}
       <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'var(--av-surface-1)',
+        paddingTop: 14, paddingBottom: 14, marginBottom: 14,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        paddingBottom: 12, marginBottom: 14,
         borderBottom: '1px solid var(--av-border-subtle)',
       }}>
-        {/* Brand */}
-        <span style={{
-          fontFamily: 'var(--av-font-mono)', fontWeight: 700, fontSize: 15,
-          letterSpacing: '-0.4px', color: 'var(--av-text-primary)',
-        }}>
-          AlgoVision
-        </span>
-
-        {/* Controls + Settings */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 2,
-            background: 'var(--av-surface-2)',
-            border: '1px solid var(--av-border-subtle)',
-            borderRadius: 6, padding: '2px 4px',
+        {/* Left: Brand */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <span style={{
+            fontFamily: 'var(--av-font-mono)', fontWeight: 800, fontSize: 22,
+            letterSpacing: '-0.5px', color: 'var(--av-blue-primary)',
+            textShadow: '0 0 16px var(--av-blue-glow)',
           }}>
-            <CtrlBtn icon={RotateCcw}                    label="Restart Session"     onClick={() => { setIsPlaying(false); sendCommand('restart'); }} />
-            <CtrlBtn icon={SkipBack}                     label="Step Back (Phase 3)" onClick={() => {}} disabled />
-            <div style={{ width: 1, height: 14, background: 'var(--av-border-subtle)', margin: '0 1px' }} />
-            <CtrlBtn icon={isPlaying ? Pause : Play}     label={isPlaying ? 'Pause' : 'Auto-Play'} active={isPlaying} onClick={() => setIsPlaying(p => !p)} />
-            <CtrlBtn icon={ChevronRight}                 label="Step Over"           onClick={() => sendCommand('stepOver')} />
-            <CtrlBtn icon={ChevronDown}                  label="Step Into"           onClick={() => sendCommand('stepInto')} />
-          </div>
+            AlgoVision
+          </span>
+        </div>
 
-          {/* Settings button */}
-          <CtrlBtn icon={Settings2} label="Settings" active={showSettings} onClick={() => setShowSettings(s => !s)} />
+        {/* Center: Playback Controls */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'var(--av-blue-subtle)',
+            border: '1.5px solid rgba(55, 148, 255, 0.25)',
+            borderRadius: 10, padding: '4px 6px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          }}>
+            <CtrlBtn icon={ChevronLeft}                  label="Step Back"           onClick={() => { setIsPlaying(false); stepBack(); }} disabled={currentIndex <= 0} />
+            <CtrlBtn icon={isPlaying ? Pause : Play}     label={isPlaying ? 'Pause' : 'Auto-Play'} active={isPlaying} onClick={() => setIsPlaying(p => !p)} />
+            <CtrlBtn icon={ChevronRight}                 label="Step Forward"        onClick={() => { setIsPlaying(false); if (currentIndex < history.length - 1) stepForward(); else sendCommand('stepOver'); }} />
+          </div>
+        </div>
+
+        {/* Right: Actions + Settings */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'relative' }}>
+          <CtrlBtn icon={RotateCcw} label="Restart Session" onClick={() => { setIsPlaying(false); resetHistory(); if (vscode) vscode.postMessage({ command: 'restart' }); }} />
+          <CtrlBtn icon={Settings2} label="Settings" active={isSettingsOpen} onClick={() => setIsSettingsOpen(s => !s)} />
 
           {/* Settings popover */}
           <AnimatePresence>
-            {showSettings && (
+            {isSettingsOpen && (
               <SettingsPopover
-                speedMs={speedMs}
-                onSpeedChange={(ms) => { setSpeedMs(ms); setShowSettings(false); }}
-                onClose={() => setShowSettings(false)}
+                speedMs={playbackSpeedMs}
+                onSpeedChange={(ms) => { setSpeedMs(ms); setIsSettingsOpen(false); }}
+                onClose={() => setIsSettingsOpen(false)}
               />
             )}
           </AnimatePresence>
@@ -305,7 +318,7 @@ export default function App() {
         )}
         {hasData && (
           <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {state.variables.length === 0 ? (
+            {variables.length === 0 ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '32px 24px', color: 'var(--av-text-muted)', fontSize: 12 }}>
                 No local variables in this scope
               </motion.div>
@@ -316,7 +329,7 @@ export default function App() {
                   <PrimitivesPanel
                     key="__primitives__"
                     variables={primitives}
-                    prevVariables={state.previousVariables}
+                    prevVariables={previousVariables}
                   />
                 )}
                 {/* Complex data structures — individual cards */}
