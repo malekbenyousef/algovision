@@ -4,10 +4,10 @@
   "description": "Real-time interactive visualization of data structures and memory states during debugging.",
   "version": "1.0.0",
   "publisher": "algovision",
-  "icon": "assets/icon.png",
   "engines": {
     "vscode": "^1.109.0"
   },
+  "activationEvents": [],
   "categories": [
     "Debuggers",
     "Education",
