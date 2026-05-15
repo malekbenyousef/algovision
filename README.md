@@ -32,15 +32,15 @@ AlgoVision is a VS Code extension aimed at **teaching and learning**: it does no
 
 ## What you get in the panel
 
-| Kind | What it looks like | Details |
-|------|-------------------|---------|
-| **Primitives** | “Locals” strip of compact pills | Values compared to the previous stop; changed cells pick up accent styling. |
-| **1D array** | Row of cells with `[i]` labels | Per-index diff vs last snapshot. |
-| **2D matrix** | Grid with row index on the left | Same idea: cell-level diff highlighting. |
-| **Linked list** | Values in a row ending at `null` | Built by following `head` / `next` via the debug API; traversal is capped at **100** nodes so a cycle cannot hang the UI. |
-| **Binary tree** | **React Flow** diagram | Custom vertical layout, optional “ghost” nodes where a child is missing; nodes/edges that changed since the last stop are emphasized. |
-| **Graph** | **React Flow** + **Dagre** (top → bottom) | Object-shaped **adjacency lists** become nodes and directed edges; newly appeared nodes/edges are visually distinct. |
-| **Object** | Key → value rows | Highlights rows whose displayed value changed. |
+| Kind            | What it looks like                        | Details                                                                                                                               |
+| --------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Primitives**  | “Locals” strip of compact pills           | Values compared to the previous stop; changed cells pick up accent styling.                                                           |
+| **Array**       | Row of cells with `[i]` labels            | Per-index diff vs last snapshot.                                                                                                      |
+| **Matrix**      | Grid with row index on the left           | Same idea: cell-level diff highlighting.                                                                                              |
+| **Object**      | Key → value rows                          | Highlights rows whose displayed value changed.                                                                                        |
+| **Linked list** | Values in a row ending at `null`          | Built by following `head` / `next` via the debug API; traversal is capped at **100** nodes so a cycle cannot hang the UI.             |
+| **Binary tree** | **React Flow** diagram                    | Custom vertical layout, optional “ghost” nodes where a child is missing; nodes/edges that changed since the last stop are emphasized. |
+| **Graph**       | **React Flow** + **Dagre** (top → bottom) | Object-shaped **adjacency lists** become nodes and directed edges; newly appeared nodes/edges are visually distinct.                  |
 
 **Classification order** (first matching enricher wins—order matters):  
 `Tree` → `LinkedList` → `Matrix` → `Array` → `Graph` → `Object` → `Primitive`  
@@ -52,20 +52,20 @@ See [`src/enrichers/index.ts`](src/enrichers/index.ts).
 
 The toolbar is meant for **reviewing** what already happened in the webview, not for replacing the debugger UI entirely.
 
-| Control | Behavior |
-|---------|----------|
-| **Auto-Play / Pause** | If you are at the **latest** snapshot, each tick sends **Step Over** to VS Code. If you stepped **back** in history, it replays forward through stored snapshots until it reaches the end, then resumes stepping the debugger. |
-| **Step Back / Forward** | Moves through **saved snapshots** only. The Node process does not run backwards. |
-| **Restart** | Invokes VS Code’s debug restart and clears webview history. |
-| **Speed** | Three presets (Fast / Normal / Slow) adjust delay **in memory** for that session. On load, the initial delay comes from the setting below; changing presets does **not** write `settings.json`. |
+| Control                 | Behavior                                                                                                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Auto-Play / Pause**   | If you are at the **latest** snapshot, each tick sends **Step Over** to VS Code. If you stepped **back** in history, it replays forward through stored snapshots until it reaches the end, then resumes stepping the debugger. |
+| **Step Back / Forward** | Moves through **saved snapshots** only. The Node process does not run backwards.                                                                                                                                               |
+| **Restart**             | Invokes VS Code’s debug restart and clears webview history.                                                                                                                                                                    |
+| **Speed**               | Three presets (Fast / Normal / Slow) adjust delay **in memory** for that session. On load, the initial delay comes from the setting below; changing presets does **not** write `settings.json`.                                |
 
 ---
 
 ## Workspace settings
 
-| Setting | Default | Range | Role |
-|---------|---------|-------|------|
-| `algovision.playbackSpeedMs` | `400` | `100`–`5000` | Milliseconds between auto-play steps when the webview first receives settings from the extension host. |
+| Setting                      | Default | Range        | Role                                                                                                   |
+| ---------------------------- | ------- | ------------ | ------------------------------------------------------------------------------------------------------ |
+| `algovision.playbackSpeedMs` | `400`   | `100`–`5000` | Milliseconds between auto-play steps when the webview first receives settings from the extension host. |
 
 ---
 
@@ -104,11 +104,11 @@ graph LR
 
 ## Tech stack
 
-| Layer | Stack |
-|-------|--------|
-| Extension | TypeScript, VS Code Extension API |
-| Webview | React 19, Vite, Tailwind CSS 4, Zustand, React Flow, Framer Motion, Lucide |
-| Tests | Vitest, `npm run test:unit` → `src/**/*.unit.test.ts` (enrichers and related host logic) |
+| Layer     | Stack                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------- |
+| Extension | TypeScript, VS Code Extension API                                                        |
+| Webview   | React 19, Vite, Tailwind CSS 4, Zustand, React Flow, Framer Motion, Lucide               |
+| Tests     | Vitest, `npm run test:unit` → `src/**/*.unit.test.ts` (enrichers and related host logic) |
 
 ---
 
@@ -133,13 +133,3 @@ npm run lint         # ESLint on src/
 Open this folder in VS Code and launch **“Run Extension”** (F5) to start an Extension Development Host with AlgoVision loaded.
 
 To ship a `.vsix`, use the [VSCE CLI](https://github.com/microsoft/vscode-vsce) (`vsce package`) from the repo root after `npm run build:all`.
-
----
-
-## Roadmap ideas
-
-- Additional runtimes (e.g. Python) with DAP-specific enrichers.
-- Optional overlays for index variables (`i`, `lo`, `hi`) on arrays.
-- Richer scope layout when many locals are present.
-
-Contributions are welcome—open a PR or issue with repro steps for a variable shape the enrichers get wrong.
