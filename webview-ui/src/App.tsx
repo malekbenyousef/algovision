@@ -10,6 +10,7 @@ import ArrayVisualizer      from './components/ArrayVisualizer';
 import MatrixVisualizer     from './components/MatrixVisualizer';
 import TreeVisualizer       from './components/TreeVisualizer';
 import GraphVisualizer      from './components/GraphVisualizer';
+import logoUrl              from './assets/logo.svg';
 
 const vscode = window.acquireVsCodeApi ? window.acquireVsCodeApi() : null;
 
@@ -269,13 +270,20 @@ export default function App() {
         borderBottom: '1px solid var(--av-border-subtle)',
       }}>
         {/* Left: Brand */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img
+            src={logoUrl}
+            alt="AlgoVision Logo"
+            style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }}
+          />
           <span style={{
             fontFamily: 'var(--av-font-mono)', fontWeight: 800, fontSize: 22,
-            letterSpacing: '-0.5px', color: 'var(--av-blue-primary)',
+            letterSpacing: '-0.5px',
             textShadow: '0 0 16px var(--av-blue-glow)',
+            lineHeight: 1,
           }}>
-            AlgoVision
+            <span style={{ color: 'var(--av-blue-primary)' }}>Algo</span>
+            <span style={{ color: '#ffffff' }}>Vision</span>
           </span>
         </div>
 
